@@ -1,13 +1,14 @@
 #include "bit_map.h"
 #include <stdio.h>
 
+// Test with 16 bits to store
 #define N 16
 uint8_t buffer[N] = {0};
 BitMap bitmap = {0};
 
 int main(int argc, char** argv) {
 
-    // Init
+    // Init bitmap
     BitMap* bm = &bitmap;
     BitMap_init(bm,N,buffer);
 
