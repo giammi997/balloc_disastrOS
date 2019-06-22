@@ -84,8 +84,6 @@ void * balloc(size_t bytes) {
             iter_idx = get_parent_idx(iter_idx);
         }
     }
-    // TODO: fix this...
-
     // Find block size (bytes) and its start pointer
     int block_size = MEM_SIZE / (1 << level);
     int start = block_size * offset;
@@ -95,10 +93,10 @@ void * balloc(size_t bytes) {
     fprintf(stderr, "[DEBUG BALLOC] block start: %d\n", start);
     #endif
 
-    // Mark as used idx and all child (subtree)
+    // Mark as used 'idx' and every child (subtree)
     set_subtree(&bitmap, idx, 1);
     // Add preamble and return proper memory pointer
-    return Block_init(&memory[start], block_size, MIN_SIZE, idx);
+    return Block_init(&memory[start], block_size, idx);
 }
 
 
@@ -107,5 +105,24 @@ void bfree(void * ptr) {
     // Make sure bitmap is initialized
     assert(bitmap.num_bits);
     
-    // ...
+    // Get bitmap index and block size and clean it
+    int block_size, idx;
+    Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
+
+    // Mark as unused 'idx' and every child (subtree)
+    set_subtree(&bitmap, idx, 0);
+    
+    // Check that EVEN BUDDY is UNUSED
+    if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {
+        // IF SO coalesce buddies iterativelly as long as possible
+        // by marking parents as used too
+        int parent_idx = get_parent_idx(idx);
+        while(parent_idx > 0) {
+            BitMap_setBit(&bitmap, parent_idx, 0);
+            // If buddy is used STOP
+            if(BitMap_getBit(&bitmap, get_buddy_idx(parent_idx)))
+                break;
+            parent_idx = get_parent_idx(parent_idx);
+        }
+    }
 }
