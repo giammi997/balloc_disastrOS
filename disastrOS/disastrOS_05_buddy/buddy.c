@@ -1,16 +1,8 @@
 #include "buddy.h"
 #include <stdio.h>
-#ifndef DEBUG
-#define DEBUG
-#endif
 
 // Block init
 void * Block_init(char * mem, int block_size, int min_block_size, int bitmap_index) {
-
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BUDDY] mem ptr: %ld\n", (long)mem);
-    #endif
-
     assert(!(block_size % min_block_size));
     assert(bitmap_index > 0);
     // Add proper preamble
