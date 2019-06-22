@@ -1,8 +1,8 @@
 CC=gcc
 OPTS=--std=gnu99 -Wall
 
-HEADERS=bit_map.h buddy.h
-BINS=bit_map_test buddy_test
+HEADERS=bit_map.h buddy.h balloc_test.h
+BINS=bit_map_test buddy_test balloc_test
 
 .phony: all clean
 
@@ -17,5 +17,8 @@ bit_map_test: bit_map_test.o bit_map.o
 buddy_test: buddy_test.o buddy.o
 	$(CC) $(OPTS) $^ -o $@
 
+balloc_test: balloc_test.o balloc.o bit_map.o buddy.o
+	$(CC) $(OPTS) $^ -o $@
+
 clean:
-	rm -rf *.o *~ $(BINS)
+	rm -rf *.o *.gch *~ $(BINS)
