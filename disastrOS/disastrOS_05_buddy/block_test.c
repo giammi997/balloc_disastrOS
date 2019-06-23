@@ -1,4 +1,4 @@
-#include "buddy.h"
+#include "block.h"
 #include <stdio.h>
 
 #define N 64
@@ -7,13 +7,13 @@ char mem[N];
 int main(int argc, char** argv) {
 
     // Test Block_init without bitmap
-    void * start = Block_init(mem, N, N/4, 3 /* dummy */);
+    void * start = Block_init(mem, 4, 3 /* dummy */);
     printf("Initial:\n");
     int * p = (int*) mem;
     for(int i=0; i < N / sizeof(int); i++)
         printf("%d-th: %d\n",i,*p++);
 
-    // Test Buddy_clean
+    // Test Block_clean
     int min_block_used, bitmax_index;
     Block_clean(mem, &min_block_used, &bitmax_index);
     printf("\nAfter cleaning:\n");

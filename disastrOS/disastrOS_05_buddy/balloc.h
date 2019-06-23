@@ -1,13 +1,13 @@
 #pragma once
 #include "bit_map.h"
-#include "buddy.h"
+#include "block.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 
 // Params
-#define MEM_SIZE 160 // (1024 * 1024) [DEBUG]
-#define LEVELS 4 // 12 [DEBUG]
+#define MEM_SIZE (1024 * 1024)
+#define LEVELS 14
 #define MIN_SIZE (MEM_SIZE >> (LEVELS - 1))
 
 // Memory allocated in .bss

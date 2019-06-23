@@ -1,8 +1,8 @@
 CC=gcc
 OPTS=--std=gnu99 -Wall
 
-HEADERS=bit_map.h buddy.h balloc_test.h
-BINS=bit_map_test buddy_test balloc_test
+HEADERS=bit_map.h block.h balloc_test.h
+BINS=bit_map_test block_test balloc_test
 
 .phony: all clean
 
@@ -14,10 +14,10 @@ all: $(BINS)
 bit_map_test: bit_map_test.o bit_map.o
 	$(CC) $(OPTS) $^ -o $@
 
-buddy_test: buddy_test.o buddy.o
+block_test: block_test.o block.o
 	$(CC) $(OPTS) $^ -o $@
 
-balloc_test: balloc_test.o balloc.o bit_map.o buddy.o
+balloc_test: balloc_test.o balloc.o bit_map.o block.o
 	$(CC) $(OPTS) $^ -o $@
 
 clean:

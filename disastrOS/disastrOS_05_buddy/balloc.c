@@ -28,14 +28,14 @@ static inline int get_buddy_idx(int idx) {
     return (idx & 0x01) ? idx - 1 : idx + 1;
 }
 
-// Set 'status' on root and all child (subtree) within 'bitmap'
-static inline void set_subtree(BitMap * bitmap, int root_idx, int status) {
+// Set 'status' on root and every child (subtree) within 'bitmap'
+static inline void bitmap_set_subtree(BitMap * bitmap, int root_idx, int status) {
     if(root_idx >= bitmap->num_bits)
         return;
     BitMap_setBit(bitmap, root_idx, status);
     int first_child_idx = get_child_idx(root_idx);
-    set_subtree(bitmap, first_child_idx, status);
-    set_subtree(bitmap, first_child_idx + 1, status);
+    bitmap_set_subtree(bitmap, first_child_idx, status);
+    bitmap_set_subtree(bitmap, first_child_idx + 1, status);
 }
 
 // MALLOC
@@ -94,7 +94,7 @@ void * balloc(size_t bytes) {
     #endif
 
     // Mark as used 'idx' and every child (subtree)
-    set_subtree(&bitmap, idx, 1);
+    bitmap_set_subtree(&bitmap, idx, 1);
     // Add preamble and return proper memory pointer
     return Block_init(&memory[start], block_size, idx);
 }
@@ -105,12 +105,12 @@ void bfree(void * ptr) {
     // Make sure bitmap is initialized
     assert(bitmap.num_bits);
     
-    // Get bitmap index and block size and clean it
+    // Get bitmap index and block size then clean it
     int block_size, idx;
     Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
 
     // Mark as unused 'idx' and every child (subtree)
-    set_subtree(&bitmap, idx, 0);
+    bitmap_set_subtree(&bitmap, idx, 0);
     
     // Check that EVEN BUDDY is UNUSED
     if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {

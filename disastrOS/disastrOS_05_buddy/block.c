@@ -1,4 +1,4 @@
-#include "buddy.h"
+#include "block.h"
 #include <stdio.h>
 
 // Block init
@@ -18,5 +18,5 @@ void Block_clean(char * mem, int * block_size, int * bitmap_idx) {
     // Side-effect on 'block_size' and 'bitmap_idx'
     *bitmap_idx = *m++;
     *block_size = *m++;
-    bzero((void*) mem, (*block_size)*sizeof(char));
+    bzero((void*) mem, (*block_size) * sizeof(char));
 }
