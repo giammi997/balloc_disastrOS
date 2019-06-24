@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 // Bitmap structure
-typedef struct {
+typedef struct BitMap {
     uint8_t * buffer;
     int size;
     int num_bits;
