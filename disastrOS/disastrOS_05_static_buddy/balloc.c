@@ -48,7 +48,7 @@ void * balloc(size_t bytes) {
 
     // Go to level found and check whether parent blocks are already split
     // Get proper level for request of 'bytes'
-    int level = get_level(bytes + 2*sizeof(int));
+    int level = get_level(bytes + 2*sizeof(int) /* preamble */);
     // Get bitmap indexes to check
     int idx_to_check = 1 << level;
     
@@ -104,14 +104,11 @@ void * balloc(size_t bytes) {
 void bfree(void * ptr) {
     // Make sure bitmap is initialized
     assert(bitmap.num_bits);
-    
     // Get bitmap index and block size then clean it
     int block_size, idx;
     Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
-
     // Mark as unused 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 0);
-    
     // Check that EVEN BUDDY is UNUSED
     if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {
         // IF SO coalesce buddies iterativelly as long as possible

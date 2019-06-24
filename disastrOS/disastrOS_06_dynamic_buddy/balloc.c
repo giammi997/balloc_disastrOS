@@ -1,13 +1,14 @@
 #include "balloc.h"
+#include <string.h>
 
 #ifndef DEBUG
-#define DEBUG
+//#define DEBUG
 #endif
 
 // Get corresponding level from a request
 static inline int get_level(size_t req) {
     int level = 0, curr_size = MEM_SIZE;
-    while(curr_size >> 1 >= req) {
+    while((curr_size >> 1) >= req) {
         level++;
         curr_size = curr_size >> 1;
     }
@@ -40,29 +41,60 @@ static inline void bitmap_set_subtree(BitMap * bitmap, int root_idx, int status)
 }
 
 
-// Buddy initialization
-void Buddy_init() {
-    // Set default params
-    MEM_SIZE = DEFAULT_MEM_SIZE;
-    LEVELS = DEFAULT_LEVELS;
-    MIN_SIZE = DEFAULT_MIN_SIZE;
+// Allocate memory and set references
+static inline void alloc_and_set(uint64_t mem_size, uint8_t levels) {
     // Find size 's' to allocate
-    size_t s = (1 << LEVELS) + MEM_SIZE;
+    size_t s = (1 << levels) + mem_size;
     // Allocate 's' bytes in heap
     int zero_fd = open("/dev/zero", O_RDWR);
     char * mem_start = mmap(0, s, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero_fd, 0);
     close(zero_fd);
-    // Set structures references
-    bitmap_buffer = (uint8_t *) mem_start;
-    memory = mem_start + (1 << LEVELS);
+    // Set Buddy references
+    bitmap_buffer = (uint8_t*) mem_start;
+    memory = mem_start + (1 << levels);
     // Init bitmap
-    BitMap_init(&bitmap, (1 << LEVELS), bitmap_buffer);
+    BitMap_init(&bitmap, (1 << levels), bitmap_buffer);
 }
 
+// Buddy initialization
+void Buddy_init() {
+    assert(!bitmap.num_bits);
+    // Set default params
+    MEM_SIZE = DEFAULT_MEM_SIZE;
+    LEVELS = DEFAULT_LEVELS;
+    MIN_SIZE = DEFAULT_MIN_SIZE;
+    // Allocate and set
+    alloc_and_set(MEM_SIZE, LEVELS);
+}
 
 // Buddy resize
-void Buddy_resize(size_t size) {
-    // ...
+void Buddy_resize(size_t new_size) {
+    assert(bitmap.num_bits);
+    assert(new_size > MEM_SIZE);
+    // Get old values
+    BitMap old_bm = {0};
+    BitMap_init(&old_bm, bitmap.num_bits, bitmap_buffer);
+    char * old_mem = memory;
+    uint8_t old_levels = LEVELS;
+    uint64_t old_mem_size = MEM_SIZE;
+    void * old_start = (void*) bitmap_buffer;
+    size_t old_size = (1 << LEVELS) + MEM_SIZE;
+    // Find sufficient number to double
+    int n_to_double = 1;
+    while(new_size > (MEM_SIZE << n_to_double++));
+    MEM_SIZE = MEM_SIZE << --n_to_double;
+    LEVELS = (uint8_t) log2(MEM_SIZE / MIN_SIZE) + 1;
+    // Allocate and set
+    alloc_and_set(MEM_SIZE, LEVELS);
+    // Build new bitmap
+    memcpy((void*) bitmap_buffer, (const void*) old_bm.buffer, (size_t) old_bm.size);
+    for(int i = (1 << (old_levels - 1)); i < old_bm.num_bits; i++)
+        if(BitMap_getBit(&bitmap, i))
+            bitmap_set_subtree(&bitmap, i, 1);
+    // Copy old memory into the new one
+    memcpy((void*) memory, (const void*) old_mem, old_mem_size);
+    // TODO: fix memory move...
+    // TODO: implement old mem unmap...
 }
 
 
@@ -73,11 +105,9 @@ void * balloc(size_t bytes) {
     if(!bitmap.num_bits)
         Buddy_init();
 
-    /*
-
     // Go to level found and check whether parent blocks are already split
     // Get proper level for request of 'bytes'
-    int level = get_level(bytes + 2*sizeof(int));
+    int level = get_level(bytes + 2*sizeof(int) /* preamble */);
     // Get bitmap indexes to check
     int idx_to_check = 1 << level;
     
@@ -97,6 +127,7 @@ void * balloc(size_t bytes) {
     }
     // Not enough memory available
     if(idx == -1) return NULL;
+    // TODO: call buddy resize...
 
     #ifdef DEBUG
     fprintf(stderr, "[DEBUG BALLOC] idx found: %d\n", idx);
@@ -126,26 +157,18 @@ void * balloc(size_t bytes) {
     bitmap_set_subtree(&bitmap, idx, 1);
     // Add preamble and return proper memory pointer
     return Block_init(&memory[start], block_size, idx);
-    */
-
-   return 0;
 }
 
 
 // FREE
 void bfree(void * ptr) {
-
-    /*
     // Make sure bitmap is initialized
     assert(bitmap.num_bits);
-    
     // Get bitmap index and block size then clean it
     int block_size, idx;
     Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
-
     // Mark as unused 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 0);
-    
     // Check that EVEN BUDDY is UNUSED
     if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {
         // IF SO coalesce buddies iterativelly as long as possible
@@ -159,6 +182,4 @@ void bfree(void * ptr) {
             parent_idx = get_parent_idx(parent_idx);
         }
     }
-    */
-
 }

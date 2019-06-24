@@ -9,8 +9,8 @@
 #include <sys/mman.h>
 
 // Default params
-#define DEFAULT_MEM_SIZE (1024*1024) // 1 MB
-#define DEFAULT_LEVELS 14
+#define DEFAULT_MEM_SIZE 160 // [DEBUG] (1024*1024) // 1 MB
+#define DEFAULT_LEVELS 4 // [DEBUG] 14
 #define DEFAULT_MIN_SIZE (DEFAULT_MEM_SIZE >> (DEFAULT_LEVELS - 1))
 
 // Params
@@ -23,11 +23,13 @@ uint8_t * bitmap_buffer;
 BitMap bitmap;
 char * memory;
 
-// Structures initialization
+// Buddy initialization
+// Set default params
 void Buddy_init();
 
-// Structures resize
-void Buddy_resize(size_t size);
+// Buddy resize
+// Double old size until is sufficient for 'new_size'
+void Buddy_resize(size_t new_size);
 
 // MALLOC
 // Buddy memory allocation
