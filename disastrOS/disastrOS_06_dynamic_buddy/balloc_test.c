@@ -1,48 +1,50 @@
-#include "balloc.h"
 #include <stdio.h>
+#include "balloc.h"
 
-// print bitmap status
-static void bitmap_status(BitMap * bm, char * msg) {
-    fprintf(stderr, "%s: ", msg);
-    for(int i = 0; i < bm->num_bits; i++)
-        fprintf(stderr, "%d ", BitMap_getBit(bm, i));
-    fprintf(stderr, "\n");
-}
-// print memory status
-static void mem_status(char * mem, char * msg) {
-    fprintf(stderr, "%s: ", msg);
-    for(int i = 0; i < MEM_SIZE; i++)
-        fprintf(stderr, "%d ", mem[i]);
-    fprintf(stderr, "\n");
-}
+#define size_a 100000
+#define size_b 2000000
+#define size_c 17500
+#define size_d 350050
 
 int main(int argc, char** argv) {
-    
-    // Test balloc
-    size_t size_a = 12;
-    char * a = balloc(size_a * sizeof(char));
+
+    int * a = balloc(size_a * sizeof(int));
     for(int i = 0; i < size_a; i++)
-        a[i] = (char) (i+1);
-
-    // Test balloc
-    size_t size_b = 72;
-    char * b = balloc(size_b * sizeof(char));
+        a[i] = i+1;
+    
+    float * b = balloc(size_b * sizeof(float));
     for(int i = 0; i < size_b; i++)
-        b[i] = (char) (size_b - i);
+        b[i] = (0.25 * i);
 
-    // Print bitmap status
-    bitmap_status(&bitmap, "bitmap before resize");
-
-    // Test balloc
-    size_t size_c = 72;
-    char * c = balloc(size_c * sizeof(char));
+    char * c = balloc(size_c * sizeof(c));
     for(int i = 0; i < size_c; i++)
-        c[i] = (char) (i+1);
+        c[i] = i+5;
+    
+    printf("Print floats: ");
+    for(int i = 0; i < size_b; i++)
+        printf("%f ", b[i]);
+    printf("\n");
 
-    // Print bitmap status
-    bitmap_status(&bitmap, "bitmap after resize");
-    // Print memory status
-    mem_status(memory, "mem");
+    bfree(b);
+
+    printf("Print chars: ");
+    for(int i = 0; i < size_c; i++)
+        printf("%d ", c[i]);
+    printf("\n");
+
+    double * d = balloc(size_d * sizeof(double));
+    for(int i = 0; i < size_d; i++)
+        d[i] = (1.33 * i);
+
+    bfree(c);
+    bfree(a);
+
+    printf("Print doubles: ");
+    for(int i = 0; i < size_d; i++)
+        printf("%f ", d[i]);
+    printf("\n");
+
+    bfree(d);
 
     return 0;
 }

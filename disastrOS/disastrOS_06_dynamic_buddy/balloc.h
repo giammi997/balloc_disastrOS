@@ -9,12 +9,12 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-// Max bytes allocatable
-#define MAX_BYTES 1U << 30 // 1 GB TODO: test performance...
+// Max total bytes allocatable
+#define MAX_BYTES 1U << 29 // 1 GB
 
 // Default params
-#define DEFAULT_MEM_SIZE 160 // [DEBUG] (1024*1024) // 1 MB
-#define DEFAULT_LEVELS 4 // [DEBUG] 14
+#define DEFAULT_MEM_SIZE (1024*1024) // 1 MB
+#define DEFAULT_LEVELS 14
 #define DEFAULT_MIN_SIZE (DEFAULT_MEM_SIZE >> (DEFAULT_LEVELS - 1))
 
 // Params

@@ -1,10 +1,5 @@
 #include "balloc.h"
-
 #define ZERO_GENERATOR "/dev/zero"
-
-#ifndef DEBUG
-//#define DEBUG
-#endif
 
 // Get level corresponding to request 'req'
 static inline int get_level(size_t req) {
@@ -134,10 +129,6 @@ void * balloc(size_t bytes) {
     int level = get_level(bytes + 2*sizeof(int) /* preamble */);
     // Get bitmap indexes to check
     int idx_to_check = 1 << level;
-    
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] first idx to check: %d\n", idx_to_check);
-    #endif
 
     // Find first free block within 'level'
     int idx = -1;
@@ -154,11 +145,6 @@ void * balloc(size_t bytes) {
         Buddy_resize(MEM_SIZE + bytes);
         return balloc(bytes);
     }
-
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] idx found: %d\n", idx);
-    fprintf(stderr, "[DEBUG BALLOC] offset: %d\n", offset);
-    #endif
     
     // Check whether PARENT IS ALREADY SPLIT
     if(!BitMap_getBit(&bitmap ,get_parent_idx(idx))) {
@@ -173,11 +159,6 @@ void * balloc(size_t bytes) {
     // Find block size (bytes) and its start pointer
     int block_size = MEM_SIZE / (1 << level);
     int start = block_size * offset;
-
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] block_size: %d\n", block_size);
-    fprintf(stderr, "[DEBUG BALLOC] block start: %d\n", start);
-    #endif
 
     // Mark as used 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 1);
