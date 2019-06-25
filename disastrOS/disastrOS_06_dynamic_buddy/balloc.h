@@ -2,11 +2,15 @@
 #include "bit_map.h"
 #include "block.h"
 #include <assert.h>
-#include <math.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+
+// Max bytes allocatable
+#define MAX_BYTES 1U << 30 // 1 GB TODO: test performance...
 
 // Default params
 #define DEFAULT_MEM_SIZE 160 // [DEBUG] (1024*1024) // 1 MB
