@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "bit_map.h"
 
 // Get number of bytes needed for 'num_bits' bits

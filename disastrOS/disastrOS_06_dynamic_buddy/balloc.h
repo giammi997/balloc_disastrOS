@@ -9,13 +9,16 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-// Max total bytes allocatable
-#define MAX_BYTES 1U << 29 // 1 GB
+// #####
+// Settings
+// #####
+#define MAX_BYTES 1U << 28 // 256 MB
+#define ZERO_GENERATOR "/dev/zero"
 
-// Default params
-#define DEFAULT_MEM_SIZE (1024*1024) // 1 MB
+#define DEFAULT_MEM_SIZE 1U << 20 // 1 MB
 #define DEFAULT_LEVELS 14
 #define DEFAULT_MIN_SIZE (DEFAULT_MEM_SIZE >> (DEFAULT_LEVELS - 1))
+// #####
 
 // Params
 uint64_t MEM_SIZE;

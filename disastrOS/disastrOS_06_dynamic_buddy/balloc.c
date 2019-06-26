@@ -1,5 +1,4 @@
 #include "balloc.h"
-#define ZERO_GENERATOR "/dev/zero"
 
 // Get level corresponding to request 'req'
 static inline int get_level(size_t req) {
@@ -60,23 +59,20 @@ static inline void build_bitmap(BitMap * new, BitMap * old) {
 // Buddy initialization
 void Buddy_init() {
     assert(!bitmap.num_bits);
-    // Set default params
+    // Set default parameters
     MEM_SIZE = DEFAULT_MEM_SIZE;
     LEVELS = DEFAULT_LEVELS;
     MIN_SIZE = DEFAULT_MIN_SIZE;
-    // Allocate region for bitmap buffer
-    // Find bitmap buffer size to allocate
+    // Find bitmap buffer size
+    // Allocate it in heap
     size_t buffer_size = 1 << LEVELS;
-    // Allocate 'buffer_size' bytes in heap
     int fd = open(ZERO_GENERATOR, O_RDWR);
     bitmap_buffer = (uint8_t*) mmap(0, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+    close(fd);
     // Initialize bitmap
     BitMap_init(&bitmap, buffer_size, bitmap_buffer);
     // Reserve huge contigous region for future actual memory extensions
     memory = (char*) mmap(0, MAX_BYTES, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
-    // Allocate initial region of memory
-    mmap(memory, MEM_SIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED, fd, 0);
-    close(fd);
 }
 
 // Buddy resize
@@ -100,7 +96,7 @@ void Buddy_resize(size_t new_min_size) {
     int fd = open(ZERO_GENERATOR, O_RDWR);
     bitmap_buffer = mmap(0, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
 
-    // TODO: fix bitmap resize...
+    // Build new bitmap buffer by starting from the old one
     BitMap_init(&bitmap, buffer_size, bitmap_buffer);
     BitMap old;
     BitMap_init(&old, old_num_bits, old_buffer);
@@ -109,10 +105,6 @@ void Buddy_resize(size_t new_min_size) {
     // Unmap old bitmap buffer
     int ret = munmap((void*) old_buffer, old_buffer_size);
     assert(!ret);
-
-    // Allocate new region contigous to the old one
-    uint64_t old_mem_size = MEM_SIZE;
-    mmap(memory + old_mem_size, MEM_SIZE - old_mem_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED, fd, 0);
     close(fd);
 }
 
@@ -142,6 +134,7 @@ void * balloc(size_t bytes) {
     }
     // Not enough memory available
     if(idx == -1) {
+        assert((MEM_SIZE + bytes) < MAX_BYTES);
         Buddy_resize(MEM_SIZE + bytes);
         return balloc(bytes);
     }

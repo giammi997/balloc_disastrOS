@@ -1,7 +1,4 @@
 #include "balloc.h"
-#ifndef DEBUG
-//#define DEBUG
-#endif
 
 // Get corresponding level from a request
 static inline int get_level(size_t req) {
@@ -12,22 +9,18 @@ static inline int get_level(size_t req) {
     }
     return level;
 }
-
 // Get parent idx from child idx
 static inline int get_parent_idx(int child_idx) {
     return child_idx >> 1;
 }
-
 // Get first child idx from parent (second = first + 1)
 static inline int get_child_idx(int parent_idx) {
     return parent_idx << 1;
 }
-
 // Get buddy idx
 static inline int get_buddy_idx(int idx) {
     return (idx & 0x01) ? idx - 1 : idx + 1;
 }
-
 // Set 'status' on root and every child (subtree) within 'bitmap'
 static inline void bitmap_set_subtree(BitMap * bitmap, int root_idx, int status) {
     if(root_idx >= bitmap->num_bits)
@@ -37,6 +30,7 @@ static inline void bitmap_set_subtree(BitMap * bitmap, int root_idx, int status)
     bitmap_set_subtree(bitmap, first_child_idx, status);
     bitmap_set_subtree(bitmap, first_child_idx + 1, status);
 }
+
 
 // MALLOC
 void * balloc(size_t bytes) {
@@ -51,10 +45,6 @@ void * balloc(size_t bytes) {
     int level = get_level(bytes + 2*sizeof(int) /* preamble */);
     // Get bitmap indexes to check
     int idx_to_check = 1 << level;
-    
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] first idx to check: %d\n", idx_to_check);
-    #endif
 
     // Find first free block within 'level'
     int idx = -1;
@@ -68,11 +58,6 @@ void * balloc(size_t bytes) {
     }
     // Not enough memory available
     if(idx == -1) return NULL;
-
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] idx found: %d\n", idx);
-    fprintf(stderr, "[DEBUG BALLOC] offset: %d\n", offset);
-    #endif
     
     // Check whether PARENT IS ALREADY SPLIT
     if(!BitMap_getBit(&bitmap ,get_parent_idx(idx))) {
@@ -88,11 +73,6 @@ void * balloc(size_t bytes) {
     int block_size = MEM_SIZE / (1 << level);
     int start = block_size * offset;
 
-    #ifdef DEBUG
-    fprintf(stderr, "[DEBUG BALLOC] block_size: %d\n", block_size);
-    fprintf(stderr, "[DEBUG BALLOC] block start: %d\n", start);
-    #endif
-
     // Mark as used 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 1);
     // Add preamble and return proper memory pointer
@@ -104,11 +84,14 @@ void * balloc(size_t bytes) {
 void bfree(void * ptr) {
     // Make sure bitmap is initialized
     assert(bitmap.num_bits);
+
     // Get bitmap index and block size then clean it
     int block_size, idx;
     Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
+
     // Mark as unused 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 0);
+
     // Check that EVEN BUDDY is UNUSED
     if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {
         // IF SO coalesce buddies iterativelly as long as possible

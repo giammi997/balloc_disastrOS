@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <assert.h>
 
 // Bitmap structure
 typedef struct BitMap {

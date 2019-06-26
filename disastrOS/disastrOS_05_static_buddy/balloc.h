@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // Params
-#define MEM_SIZE (1024 * 1024)
+#define MEM_SIZE 1U << 20 // 1 MB
 #define LEVELS 14
 #define MIN_SIZE (MEM_SIZE >> (LEVELS - 1))
 
