@@ -40,6 +40,7 @@ static inline void build_bitmap(BitMap * new, BitMap * old) {
     // Set the new root bit
     int k = 1;
     BitMap_setBit(new, k++, 1);
+
     // Loop for each old level
     int level_iter = 0;
     for(int i = 1; i < old->num_bits; i++) {
@@ -59,19 +60,23 @@ static inline void build_bitmap(BitMap * new, BitMap * old) {
 // Buddy initialization
 void Buddy_init() {
     assert(!bitmap.num_bits);
+
     // Set default parameters
     MEM_SIZE = DEFAULT_MEM_SIZE;
     LEVELS = DEFAULT_LEVELS;
     MIN_SIZE = DEFAULT_MIN_SIZE;
+
     // Find bitmap buffer size
     // Allocate it in heap
     size_t buffer_size = 1 << LEVELS;
     int fd = open(ZERO_GENERATOR, O_RDWR);
     bitmap_buffer = (uint8_t*) mmap(0, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
     close(fd);
+
     // Initialize bitmap
     BitMap_init(&bitmap, buffer_size, bitmap_buffer);
-    // Reserve huge contigous region for future actual memory extensions
+    
+    // Reserve a contiguous region of 'MAX_BYTES' for future allocations
     memory = (char*) mmap(0, MAX_BYTES, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
 }
 
