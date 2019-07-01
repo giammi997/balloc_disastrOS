@@ -8,6 +8,8 @@ HEADERS=disastrOS.h\
 	disastrOS_syscalls.h\
 	linked_list.h\
 	pool_allocator.h\
+	bit_map.h\
+	block.h
 
 OBJS=pool_allocator.o\
      linked_list.o\
@@ -19,13 +21,16 @@ OBJS=pool_allocator.o\
      disastrOS_exit.o\
      disastrOS_shutdown.o\
      disastrOS_schedule.o\
-     disastrOS_preempt.o
+     disastrOS_preempt.o\
+	 bit_map.o\
+	 block.o\
+	 disastrOS_balloc.o\
+	 disastrOS_bfree.o
 
 LIBS=libdisastrOS.a
 
 BINS=disastrOS_test
 
-#disastros_test
 
 .phony: clean all
 
@@ -40,7 +45,7 @@ libdisastrOS.a: $(OBJS)
 	$(RM) $(OBJS)
 
 disastrOS_test:		disastrOS_test.c $(LIBS)
-	$(CC) $(CCOPTS) -o $@ $^
+	$(CC) $(CCOPTS) -o $@ $^ -lm
 
 clean:
 	rm -rf *.o *~ $(LIBS) $(BINS)

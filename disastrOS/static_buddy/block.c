@@ -1,3 +1,5 @@
+// *** GIANMARCO ***
+
 #include "block.h"
 #include <stdio.h>
 
@@ -7,6 +9,7 @@ void * Block_init(char * mem, int block_size, int bitmap_idx) {
     // Add proper preamble
     int * m = (int*) mem;
     *m++ = bitmap_idx;
+    printf("OK\n");
     *m++ = block_size;
     return (void*) m;
 }

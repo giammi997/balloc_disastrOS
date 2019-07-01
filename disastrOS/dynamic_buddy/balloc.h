@@ -12,7 +12,7 @@
 // #####
 // Settings
 // #####
-#define MAX_BYTES 1U << 28 // 256 MB
+#define MAX_BYTES 1U << 29 // 512 MB
 #define ZERO_GENERATOR "/dev/zero"
 
 #define DEFAULT_MEM_SIZE 1U << 20 // 1 MB

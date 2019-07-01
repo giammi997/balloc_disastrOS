@@ -16,3 +16,8 @@ void internal_spawn();
 void internal_shutdown();
 
 void internal_schedule();
+
+// *** GIANMARCO ***
+void internal_balloc();
+void internal_bfree();
+// *** GIANMARCO ***

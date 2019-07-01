@@ -27,6 +27,10 @@
 #define DSOS_CALL_SPAWN     5
 #define DSOS_CALL_SLEEP     6
 #define DSOS_CALL_SHUTDOWN  7
+// *** GIANMARCO ***
+#define DSOS_CALL_BALLOC    8
+#define DSOS_CALL_BFREE     9
+// *** GIANMARCO ***
 
 // scheduling
 #define ALPHA 0.5f

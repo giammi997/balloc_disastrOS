@@ -160,6 +160,18 @@ void disastrOS_shutdown() {
   disastrOS_syscall(DSOS_CALL_SHUTDOWN);
 }
 
+// *** GIANMARCO ***
+void * disastrOS_balloc(size_t bytes) {
+  disastrOS_syscall(DSOS_CALL_BALLOC, bytes);
+  // RETRIEVE RESULT FROM PCB ARGS VECTOR
+  return (void*) running->syscall_args[1];
+}
+
+void disastrOS_bfree(void * ptr) {
+  disastrOS_syscall(DSOS_CALL_BFREE, ptr);
+}
+// *** GIANMARCO ***
+
 int disastrOS_getpid(){
   if (! running)
     return -1;
@@ -191,8 +203,16 @@ void disastrOS_start(void (*f)(void*), void* f_args, char* logfile){
   syscall_vector[DSOS_CALL_EXIT]      = internal_exit;
   syscall_numarg[DSOS_CALL_EXIT]      = 1;
 
-  syscall_vector[DSOS_CALL_SHUTDOWN]      = internal_shutdown;
-  syscall_numarg[DSOS_CALL_SHUTDOWN]      = 0;
+  syscall_vector[DSOS_CALL_SHUTDOWN]  = internal_shutdown;
+  syscall_numarg[DSOS_CALL_SHUTDOWN]  = 0;
+  
+  // *** GIANMARCO ***
+  syscall_vector[DSOS_CALL_BALLOC]    = internal_balloc;
+  syscall_numarg[DSOS_CALL_BALLOC]    = 1;
+
+  syscall_vector[DSOS_CALL_BFREE]     = internal_bfree;
+  syscall_numarg[DSOS_CALL_BFREE]     = 1;
+  // *** GIANMARCO ***
 
   // setup the scheduling lists
   running=0;

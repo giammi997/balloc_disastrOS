@@ -1,3 +1,5 @@
+// *** GIANMARCO ***
+
 #pragma once
 #include <assert.h>
 #include <strings.h>

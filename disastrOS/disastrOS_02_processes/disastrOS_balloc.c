@@ -1,4 +1,17 @@
-#include "balloc.h"
+// *** GIANMARCO ***
+
+#include "bit_map.h"
+#include "block.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+#include "disastrOS.h"
+#include "disastrOS_syscalls.h"
 
 // Get level corresponding to request 'req'
 static inline int get_level(size_t req) {
@@ -71,13 +84,13 @@ void Buddy_init() {
     size_t buffer_size = 1 << LEVELS;
     int fd = open(ZERO_GENERATOR, O_RDWR);
     bitmap_buffer = (uint8_t*) mmap(0, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
-    close(fd);
 
     // Initialize bitmap
     BitMap_init(&bitmap, buffer_size, bitmap_buffer);
     
-    // Reserve a contiguous region of 'MAX_BYTES' for future allocations
-    memory = (char*) mmap(0, MAX_BYTES, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+    // Reserve a contiguous region of 'MAX_BYTES_ALLOCATABLE' for future allocations
+    memory = (char*) mmap(0, MAX_BYTES_ALLOCATABLE, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+    close(fd);
 }
 
 // Buddy resize
@@ -114,8 +127,11 @@ void Buddy_resize(size_t new_min_size) {
 }
 
 
-// MALLOC
-void * balloc(size_t bytes) {
+// MEMORY ALLOCATION
+void internal_balloc() {
+
+    // RETRIEVE ARGUMENT FROM PCB OF RUNNING PROCESS
+    size_t bytes = running->syscall_args[0];
 
     // Initialize Buddy if necessary
     if(!bitmap.num_bits)
@@ -139,9 +155,9 @@ void * balloc(size_t bytes) {
     }
     // Not enough memory available
     if(idx == -1) {
-        assert((MEM_SIZE + bytes) < MAX_BYTES);
+        assert((MEM_SIZE + bytes) < MAX_BYTES_ALLOCATABLE);
         Buddy_resize(MEM_SIZE + bytes);
-        return balloc(bytes);
+        internal_balloc();
     }
     
     // Check whether PARENT IS ALREADY SPLIT
@@ -161,32 +177,8 @@ void * balloc(size_t bytes) {
     // Mark as used 'idx' and every child (subtree)
     bitmap_set_subtree(&bitmap, idx, 1);
     // Add preamble and return proper memory pointer
-    return Block_init(&memory[start], block_size, idx);
+
+    // PUT RESULT IN PCB ARGS VECTOR TO AVOID PTR SIZE PROBLEM
+    running->syscall_args[1] = (long int) Block_init(&memory[start], block_size, idx);
 }
 
-
-// FREE
-void bfree(void * ptr) {
-    // Make sure bitmap is initialized
-    assert(bitmap.num_bits);
-
-    // Get bitmap index and block size, then clean it
-    int block_size, idx;
-    Block_clean(ptr - 2*sizeof(int), &block_size, &idx);
-    // Mark as unused 'idx' and every child (subtree)
-    bitmap_set_subtree(&bitmap, idx, 0);
-
-    // Check that EVEN BUDDY is UNUSED
-    if(!BitMap_getBit(&bitmap, get_buddy_idx(idx))) {
-        // IF SO coalesce buddies iterativelly as long as possible
-        // by marking parents as used too
-        int parent_idx = get_parent_idx(idx);
-        while(parent_idx > 0) {
-            BitMap_setBit(&bitmap, parent_idx, 0);
-            // If buddy is used STOP
-            if(BitMap_getBit(&bitmap, get_buddy_idx(parent_idx)))
-                break;
-            parent_idx = get_parent_idx(parent_idx);
-        }
-    }
-}
